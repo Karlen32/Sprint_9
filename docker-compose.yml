@@ -1,0 +1,22 @@
+services:
+  selenoid:
+    image: aerokube/selenoid:latest
+    environment:
+      DOCKER_API_VERSION: "1.44"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./browsers.json:/etc/selenoid/browsers.json:ro
+    command: ["-conf", "/etc/selenoid/browsers.json", "-limit", "4"]
+    ports:
+      - "4444:4444"
+
+  tests:
+    build: .
+    depends_on:
+      - selenoid
+    environment:
+      BASE_URL: ${BASE_URL}
+      SELENOID_URI: http://selenoid:4444/wd/hub
+    volumes:
+      - ./allure-results:/app/allure-results
+    command: pytest -v --alluredir=allure-results
